@@ -97,9 +97,7 @@ Summary:	Documentation for the Hamlib radio control library
 Summary(pl.UTF-8):	Dokumentacja do biblioteki sterującej radiem Hamlib
 License:	LGPL v2.1+
 Group:		Documentation
-%if "%{_rpmversion}" >= "5"
 BuildArch:	noarch
-%endif
 
 %description doc
 This package provides the developers documentation for the Hamlib
