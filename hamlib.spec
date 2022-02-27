@@ -11,7 +11,7 @@ Summary:	Library to control radio transceivers and receivers
 Summary(pl.UTF-8):	Biblioteka do sterowania nadajnikami i odbiornikami radiowymi
 Name:		hamlib
 Version:	3.3
-Release:	5
+Release:	6
 License:	LGPL v2.1+ (library), GPL v2+ (programs)
 Group:		Libraries
 #Source0Download: https://github.com/Hamlib/Hamlib/releases
