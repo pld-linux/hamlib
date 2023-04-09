@@ -39,6 +39,7 @@ BuildRequires:	libxml2-devel >= 2.0
 BuildRequires:	pkgconfig
 %{?with_python:BuildRequires:	python-devel >= 2.1}
 BuildRequires:	readline-devel
+BuildRequires:	source-highlight
 %{?with_perl:BuildRequires:	swig-perl >= 1.3.22}
 %{?with_python:BuildRequires:	swig-python >= 1.3.22}
 %{?with_tcl:BuildRequires:	swig-tcl >= 1.3.22}
