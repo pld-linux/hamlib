@@ -1,6 +1,7 @@
 #
 # Conditional build:
 %bcond_without	static_libs	# static library
+%bcond_without	indi		# INDI rigctl/rotctl support
 %bcond_without	usrp		# USRP backend
 %bcond_without	lua		# Lua binding
 %bcond_without	perl		# Perl binding
@@ -10,25 +11,25 @@
 Summary:	Library to control radio transceivers and receivers
 Summary(pl.UTF-8):	Biblioteka do sterowania nadajnikami i odbiornikami radiowymi
 Name:		hamlib
-Version:	3.3
-Release:	7
+Version:	4.5.5
+Release:	1
 License:	LGPL v2.1+ (library), GPL v2+ (programs)
 Group:		Libraries
 #Source0Download: https://github.com/Hamlib/Hamlib/releases
 Source0:	https://github.com/Hamlib/Hamlib/releases/download/%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	2faa2894a61ed0ef307740aa6e3b73e4
+# Source0-md5:	9996f507ae570be50d09df1157f140e0
 Patch0:		%{name}-perl_install.patch
-Patch1:		%{name}-format.patch
-Patch2:		%{name}-info.patch
-Patch3:		%{name}-usrp.patch
+Patch1:		%{name}-usrp.patch
 URL:		http://hamlib.org/
-BuildRequires:	autoconf >= 2.67
+BuildRequires:	autoconf >= 2.69
 BuildRequires:	automake
 BuildRequires:	boost-devel
 BuildRequires:	doxygen
 BuildRequires:	gd-devel
+%{?with_indi:BuildRequires:	libindi-devel}
 BuildRequires:	libltdl-devel >= 2:2.2.6b
-BuildRequires:	libstdc++-devel
+%{?with_indi:BuildRequires:	libnova-devel}
+BuildRequires:	libstdc++-devel >= 6:4.7
 BuildRequires:	libtool >= 2:2.2.6b
 %{?with_usrp:BuildRequires:	libusrp-devel >= 0.8}
 BuildRequires:	libusb-devel >= 1.0
@@ -42,8 +43,9 @@ BuildRequires:	readline-devel
 %{?with_python:BuildRequires:	swig-python >= 1.3.22}
 %{?with_tcl:BuildRequires:	swig-tcl >= 1.3.22}
 %{?with_tcl:BuildRequires:	tcl-devel}
-BuildRequires:	texinfo
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
+
+%define		tcl_libdir	%{_libdir}/tcl%{tcl_version}
 
 %description
 Hamlib provides a standardized programming interface that applications
@@ -127,7 +129,7 @@ License:	LGPL v2.1+
 Group:		Development/Libraries
 Requires:	%{name}-c++ = %{version}-%{release}
 Requires:	%{name}-devel = %{version}-%{release}
-Requires:	libstdc++-devel
+Requires:	libstdc++-devel >= 6:4.7
 
 %description c++-devel
 Development headers for building C++ applications with Hamlib radio
@@ -210,8 +212,6 @@ radiem z poziomu skryptów Tcl-a.
 %setup -q
 %patch0 -p1
 %patch1 -p1
-%patch2 -p1
-%patch3 -p1
 
 %build
 %{__libtoolize}
@@ -221,9 +221,11 @@ radiem z poziomu skryptów Tcl-a.
 %{__automake}
 %configure \
 	LUA=/usr/bin/lua5.2 \
+	TCL_VERSION=%{tcl_version} \
 	--disable-silent-rules \
 	%{!?with_static_libs:--disable-static} \
 	%{?with_usrp:--enable-usrp} \
+	%{!?with_indi:--without-indi} \
 	%{?with_lua:--with-lua-binding} \
 	%{?with_perl:--with-perl-binding} \
 	%{?with_python:--with-python-binding} \
@@ -241,8 +243,6 @@ rm -rf $RPM_BUILD_ROOT
 
 # obsoleted by pkg-config
 %{__rm} $RPM_BUILD_ROOT%{_libdir}/libhamlib*.la
-
-%{__rm} -f $RPM_BUILD_ROOT%{_infodir}/dir
 
 %if %{with lua}
 %{__rm} $RPM_BUILD_ROOT%{_libdir}/lua/5.*/Hamliblua.la \
@@ -265,33 +265,38 @@ rm -rf $RPM_BUILD_ROOT
 	%{?with_static_libs:$RPM_BUILD_ROOT%{_libdir}/tcl*/Hamlib/hamlibtcl.a}
 %endif
 
+# packaged as %doc
+%{__rm} -r $RPM_BUILD_ROOT%{_docdir}/hamlib
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-%post	-p /sbin/postshell
-/sbin/ldconfig
--/usr/sbin/fix-info-dir -c %{_infodir}
-
-%postun	-p /sbin/postshell
-/sbin/ldconfig
--/usr/sbin/fix-info-dir -c %{_infodir}
+%post	-p /sbin/ldconfig
+%postun	-p /sbin/ldconfig
 
 %post	c++ -p /sbin/ldconfig
 %postun	c++ -p /sbin/ldconfig
 
 %files
 %defattr(644,root,root,755)
-%doc AUTHORS ChangeLog LICENSE NEWS PLAN README THANKS TODO
+%doc AUTHORS ChangeLog LICENSE NEWS PLAN README README.freqranges README.multicast THANKS
+%attr(755,root,root) %{_bindir}/ampctl
+%attr(755,root,root) %{_bindir}/ampctld
 %attr(755,root,root) %{_bindir}/rigctl
+%attr(755,root,root) %{_bindir}/rigctlcom
 %attr(755,root,root) %{_bindir}/rigctld
 %attr(755,root,root) %{_bindir}/rigmem
 %attr(755,root,root) %{_bindir}/rigsmtr
 %attr(755,root,root) %{_bindir}/rigswr
+%attr(755,root,root) %{_bindir}/rigtestlibusb
 %attr(755,root,root) %{_bindir}/rotctl
 %attr(755,root,root) %{_bindir}/rotctld
 %attr(755,root,root) %{_libdir}/libhamlib.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libhamlib.so.2
+%attr(755,root,root) %ghost %{_libdir}/libhamlib.so.4
+%{_mandir}/man1/ampctl.1*
+%{_mandir}/man1/ampctld.1*
 %{_mandir}/man1/rigctl.1*
+%{_mandir}/man1/rigctlcom.1*
 %{_mandir}/man1/rigctld.1*
 %{_mandir}/man1/rigmem.1*
 %{_mandir}/man1/rigsmtr.1*
@@ -301,12 +306,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man7/hamlib.7*
 %{_mandir}/man7/hamlib-primer.7*
 %{_mandir}/man7/hamlib-utilities.7*
-%{_infodir}/hamlib.info*
 
 %files devel
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_libdir}/libhamlib.so
 %dir %{_includedir}/hamlib
+%{_includedir}/hamlib/ampclass.h
+%{_includedir}/hamlib/amplifier.h
+%{_includedir}/hamlib/amplist.h
+%{_includedir}/hamlib/config.h
 %{_includedir}/hamlib/rig.h
 %{_includedir}/hamlib/rig_dll.h
 %{_includedir}/hamlib/riglist.h
@@ -328,7 +336,7 @@ rm -rf $RPM_BUILD_ROOT
 %files c++
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_libdir}/libhamlib++.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libhamlib++.so.2
+%attr(755,root,root) %ghost %{_libdir}/libhamlib++.so.4
 
 %files c++-devel
 %defattr(644,root,root,755)
@@ -366,7 +374,7 @@ rm -rf $RPM_BUILD_ROOT
 %if %{with tcl}
 %files -n tcl-%{name}
 %defattr(644,root,root,755)
-%dir %{_libdir}/tcl8.6/Hamlib
-%attr(755,root,root) %{_libdir}/tcl8.6/Hamlib/hamlibtcl*.so
-%{_libdir}/tcl8.6/Hamlib/pkgIndex.tcl
+%dir %{tcl_libdir}/Hamlib
+%attr(755,root,root) %{tcl_libdir}/Hamlib/hamlibtcl*.so
+%{tcl_libdir}/Hamlib/pkgIndex.tcl
 %endif
