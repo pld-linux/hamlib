@@ -5,7 +5,8 @@
 %bcond_without	usrp		# USRP backend
 %bcond_without	lua		# Lua binding
 %bcond_without	perl		# Perl binding
-%bcond_without	python		# Python binding
+%bcond_without	python2		# CPython 2.x binding
+%bcond_without	python3		# CPython 3.x binding
 %bcond_without	tcl		# Tcl binding
 
 Summary:	Library to control radio transceivers and receivers
@@ -37,7 +38,8 @@ BuildRequires:	libxml2-devel >= 2.0
 %{?with_lua:BuildRequires:	lua52-devel >= 5.2}
 %{?with_perl:BuildRequires:	perl-devel}
 BuildRequires:	pkgconfig
-%{?with_python:BuildRequires:	python-devel >= 2.1}
+%{?with_python2:BuildRequires:	python-devel >= 2.1}
+%{?with_python3:BuildRequires:	python3-devel >= 1:3.2}
 BuildRequires:	readline-devel
 BuildRequires:	source-highlight
 %{?with_perl:BuildRequires:	swig-perl >= 1.3.22}
@@ -183,8 +185,8 @@ Wiązania języka Perl do biblioteki Hamlib, umożliwiające sterowanie
 radiem z poziomu skryptów Perla.
 
 %package -n python-%{name}
-Summary:	Hamlib radio control library Python binding
-Summary(pl.UTF-8):	Wiązanie Pythona do biblioteki sterującej radiem Hamlib
+Summary:	Hamlib radio control library Python 2 binding
+Summary(pl.UTF-8):	Wiązanie Pythona 2 do biblioteki sterującej radiem Hamlib
 Group:		Libraries/Perl
 Requires:	%{name} = %{version}-%{release}
 
@@ -193,6 +195,20 @@ Hamlib Python language bindings to allow radio control from Python
 scripts.
 
 %description -n python-%{name} -l pl.UTF-8
+Wiązania języka Python do biblioteki Hamlib, umożliwiające sterowanie
+radiem z poziomu skryptów Pythona.
+
+%package -n python3-%{name}
+Summary:	Hamlib radio control library Python 3 binding
+Summary(pl.UTF-8):	Wiązanie Pythona 3 do biblioteki sterującej radiem Hamlib
+Group:		Libraries/Perl
+Requires:	%{name} = %{version}-%{release}
+
+%description -n python3-%{name}
+Hamlib Python language bindings to allow radio control from Python
+scripts.
+
+%description -n python3-%{name} -l pl.UTF-8
 Wiązania języka Python do biblioteki Hamlib, umożliwiające sterowanie
 radiem z poziomu skryptów Pythona.
 
@@ -220,8 +236,26 @@ radiem z poziomu skryptów Tcl-a.
 %{__autoconf}
 %{__autoheader}
 %{__automake}
-%configure \
+%if %{with python2}
+install -d build-python2
+cd build-python2
+../%configure \
+	PYTHON=%{__python} \
+	--disable-silent-rules \
+	--disable-static \
+	%{?with_usrp:--enable-usrp} \
+	%{!?with_indi:--without-indi} \
+	--with-python-binding
+
+%{__make}
+cd ..
+%endif
+
+install -d build
+cd build
+../%configure \
 	LUA=/usr/bin/lua5.2 \
+	PYTHON=%{__python3} \
 	TCL_VERSION=%{tcl_version} \
 	--disable-silent-rules \
 	%{!?with_static_libs:--disable-static} \
@@ -229,7 +263,7 @@ radiem z poziomu skryptów Tcl-a.
 	%{!?with_indi:--without-indi} \
 	%{?with_lua:--with-lua-binding} \
 	%{?with_perl:--with-perl-binding} \
-	%{?with_python:--with-python-binding} \
+	%{?with_python3:--with-python-binding} \
 	%{?with_tcl:--with-tcl-binding}
 
 %{__make}
@@ -239,7 +273,12 @@ radiem z poziomu skryptów Tcl-a.
 %install
 rm -rf $RPM_BUILD_ROOT
 
-%{__make} install \
+%if %{with python2}
+%{__make} -C build-python2 install \
+	DESTDIR=$RPM_BUILD_ROOT
+%endif
+
+%{__make} -C build install \
 	DESTDIR=$RPM_BUILD_ROOT
 
 # obsoleted by pkg-config
@@ -251,14 +290,17 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %if %{with perl}
-%{__rm} $RPM_BUILD_ROOT%{perl_vendorarch}/perltest.pl
 %{__rm} -f $RPM_BUILD_ROOT%{perl_vendorarch}/auto/Hamlib/.packlist
 %endif
 
-%if %{with python}
-%{__rm} $RPM_BUILD_ROOT%{py_sitedir}/_Hamlib.la \
-	%{?with_static_libs:$RPM_BUILD_ROOT%{py_sitedir}/_Hamlib.a}
+%if %{with python2}
+%{__rm} $RPM_BUILD_ROOT%{py_sitedir}/_Hamlib.la
 %py_postclean
+%endif
+
+%if %{with python3}
+%{__rm} $RPM_BUILD_ROOT%{py3_sitedir}/_Hamlib.la \
+	%{?with_static_libs:$RPM_BUILD_ROOT%{py3_sitedir}/_Hamlib.a}
 %endif
 
 %if %{with tcl}
@@ -332,7 +374,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files doc
 %defattr(644,root,root,755)
-%doc doc/html/{search,*.css,*.html,*.js,*.png}
+%doc build/doc/html/{search,*.css,*.html,*.js,*.png}
 
 %files c++
 %defattr(644,root,root,755)
@@ -365,11 +407,19 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{perl_vendorarch}/auto/Hamlib/Hamlib.so
 %endif
 
-%if %{with python}
+%if %{with python2}
 %files -n python-%{name}
 %defattr(644,root,root,755)
 %attr(755,root,root) %{py_sitedir}/_Hamlib.so
 %{py_sitedir}/Hamlib.py[co]
+%endif
+
+%if %{with python3}
+%files -n python3-%{name}
+%defattr(644,root,root,755)
+%attr(755,root,root) %{py3_sitedir}/_Hamlib.so
+%{py3_sitedir}/Hamlib.py
+%{py3_sitedir}/__pycache__/Hamlib.cpython-*.py[co]
 %endif
 
 %if %{with tcl}
