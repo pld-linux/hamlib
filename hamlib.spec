@@ -41,6 +41,7 @@ BuildRequires:	pkgconfig
 %{?with_python2:BuildRequires:	python-devel >= 2.1}
 %{?with_python3:BuildRequires:	python3-devel >= 1:3.2}
 BuildRequires:	readline-devel
+BuildRequires:	rpmbuild(macros) >= 2.043
 BuildRequires:	source-highlight
 %{?with_perl:BuildRequires:	swig-perl >= 1.3.22}
 %{?with_python:BuildRequires:	swig-python >= 1.3.22}
@@ -236,10 +237,11 @@ radiem z poziomu skryptów Tcl-a.
 %{__autoconf}
 %{__autoheader}
 %{__automake}
+%define configuredir ..
 %if %{with python2}
 install -d build-python2
 cd build-python2
-../%configure \
+%configure \
 	PYTHON=%{__python} \
 	--disable-silent-rules \
 	--disable-static \
@@ -253,7 +255,7 @@ cd ..
 
 install -d build
 cd build
-../%configure \
+%configure \
 	LUA=/usr/bin/lua5.2 \
 	PYTHON=%{__python3} \
 	TCL_VERSION=%{tcl_version} \
