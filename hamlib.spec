@@ -12,13 +12,13 @@
 Summary:	Library to control radio transceivers and receivers
 Summary(pl.UTF-8):	Biblioteka do sterowania nadajnikami i odbiornikami radiowymi
 Name:		hamlib
-Version:	4.5.5
-Release:	5
+Version:	4.6.2
+Release:	1
 License:	LGPL v2.1+ (library), GPL v2+ (programs)
 Group:		Libraries
 #Source0Download: https://github.com/Hamlib/Hamlib/releases
 Source0:	https://github.com/Hamlib/Hamlib/releases/download/%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	9996f507ae570be50d09df1157f140e0
+# Source0-md5:	5cf7fa5fdc692050c7df8ea709f63f25
 Patch0:		%{name}-perl_install.patch
 Patch1:		%{name}-usrp.patch
 URL:		http://hamlib.org/
@@ -43,9 +43,9 @@ BuildRequires:	pkgconfig
 BuildRequires:	readline-devel
 BuildRequires:	rpmbuild(macros) >= 2.043
 BuildRequires:	source-highlight
-%{?with_perl:BuildRequires:	swig-perl >= 1.3.22}
-%{?with_python:BuildRequires:	swig-python >= 1.3.22}
-%{?with_tcl:BuildRequires:	swig-tcl >= 1.3.22}
+%{?with_perl:BuildRequires:	swig-perl >= 3.0.12}
+%{?with_python:BuildRequires:	swig-python >= 3.0.12}
+%{?with_tcl:BuildRequires:	swig-tcl >= 3.0.12}
 %{?with_tcl:BuildRequires:	tcl-devel}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -253,6 +253,19 @@ cd build-python2
 cd ..
 %endif
 
+%if %{with static_libs}
+install -d build-static
+cd build-static
+%configure \
+	--disable-silent-rules \
+	--disable-shared \
+	%{?with_usrp:--enable-usrp} \
+	%{!?with_indi:--without-indi}
+
+%{__make}
+cd ..
+%endif
+
 install -d build
 cd build
 %configure \
@@ -260,7 +273,7 @@ cd build
 	PYTHON=%{__python3} \
 	TCL_VERSION=%{tcl_version} \
 	--disable-silent-rules \
-	%{!?with_static_libs:--disable-static} \
+	--disable-static \
 	%{?with_usrp:--enable-usrp} \
 	%{!?with_indi:--without-indi} \
 	%{?with_lua:--with-lua-binding} \
@@ -280,6 +293,11 @@ rm -rf $RPM_BUILD_ROOT
 	DESTDIR=$RPM_BUILD_ROOT
 %endif
 
+%if %{with static_libs}
+%{__make} -C build-static install \
+	DESTDIR=$RPM_BUILD_ROOT
+%endif
+
 %{__make} -C build install \
 	DESTDIR=$RPM_BUILD_ROOT
 
@@ -287,8 +305,7 @@ rm -rf $RPM_BUILD_ROOT
 %{__rm} $RPM_BUILD_ROOT%{_libdir}/libhamlib*.la
 
 %if %{with lua}
-%{__rm} $RPM_BUILD_ROOT%{_libdir}/lua/5.*/Hamliblua.la \
-	%{?with_static_libs:$RPM_BUILD_ROOT%{_libdir}/lua/5.*/Hamliblua.a}
+%{__rm} $RPM_BUILD_ROOT%{_libdir}/lua/5.*/Hamliblua.la
 %endif
 
 %if %{with perl}
@@ -301,13 +318,11 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %if %{with python3}
-%{__rm} $RPM_BUILD_ROOT%{py3_sitedir}/_Hamlib.la \
-	%{?with_static_libs:$RPM_BUILD_ROOT%{py3_sitedir}/_Hamlib.a}
+%{__rm} $RPM_BUILD_ROOT%{py3_sitedir}/_Hamlib.la
 %endif
 
 %if %{with tcl}
-%{__rm} $RPM_BUILD_ROOT%{_libdir}/tcl*/Hamlib/hamlibtcl.la \
-	%{?with_static_libs:$RPM_BUILD_ROOT%{_libdir}/tcl*/Hamlib/hamlibtcl.a}
+%{__rm} $RPM_BUILD_ROOT%{_libdir}/tcl*/Hamlib/hamlibtcl.la
 %endif
 
 # packaged as %doc
@@ -330,10 +345,15 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/rigctl
 %attr(755,root,root) %{_bindir}/rigctlcom
 %attr(755,root,root) %{_bindir}/rigctld
+%attr(755,root,root) %{_bindir}/rigctlsync
+%attr(755,root,root) %{_bindir}/rigctltcp
+%attr(755,root,root) %{_bindir}/rigfreqwalk
 %attr(755,root,root) %{_bindir}/rigmem
 %attr(755,root,root) %{_bindir}/rigsmtr
 %attr(755,root,root) %{_bindir}/rigswr
 %attr(755,root,root) %{_bindir}/rigtestlibusb
+%attr(755,root,root) %{_bindir}/rigtestmcast
+%attr(755,root,root) %{_bindir}/rigtestmcastrx
 %attr(755,root,root) %{_bindir}/rotctl
 %attr(755,root,root) %{_bindir}/rotctld
 %attr(755,root,root) %{_libdir}/libhamlib.so.*.*.*
@@ -343,6 +363,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/rigctl.1*
 %{_mandir}/man1/rigctlcom.1*
 %{_mandir}/man1/rigctld.1*
+%{_mandir}/man1/rigctlsync.1*
 %{_mandir}/man1/rigmem.1*
 %{_mandir}/man1/rigsmtr.1*
 %{_mandir}/man1/rigswr.1*
@@ -359,7 +380,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/hamlib/ampclass.h
 %{_includedir}/hamlib/amplifier.h
 %{_includedir}/hamlib/amplist.h
-%{_includedir}/hamlib/config.h
+%{_includedir}/hamlib/multicast.h
 %{_includedir}/hamlib/rig.h
 %{_includedir}/hamlib/rig_dll.h
 %{_includedir}/hamlib/riglist.h

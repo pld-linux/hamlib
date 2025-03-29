@@ -1,5 +1,5 @@
---- hamlib-4.5.5/rigs/kit/usrp_impl.cc.orig	2018-08-20 17:30:25.000000000 +0200
-+++ hamlib-4.5.5/rigs/kit/usrp_impl.cc	2019-05-13 05:31:23.318062894 +0200
+--- hamlib-4.6.2/rigs/kit/usrp_impl.cc.orig	2025-03-29 19:21:53.168641530 +0100
++++ hamlib-4.6.2/rigs/kit/usrp_impl.cc	2025-03-29 19:28:39.819771845 +0100
 @@ -32,7 +32,7 @@
  #include <stdlib.h>
  #include <stdio.h>
@@ -9,3 +9,94 @@
  
  #include "usrp_impl.h"
  #include "token.h"
+@@ -46,7 +46,7 @@ struct usrp_priv_data {
+ int usrp_init(RIG *rig)
+ {
+     // cppcheck-suppress leakReturnValNotUsed
+-	STATE(rig)->priv = static_cast<struct usrp_priv_data*>malloc(sizeof(struct usrp_priv_data));
++	STATE(rig)->priv = static_cast<struct usrp_priv_data*>(malloc(sizeof(struct usrp_priv_data)));
+ 	if (!STATE(rig)->priv) {
+ 		/* whoops! memory shortage! */
+ 		return -RIG_ENOMEM;
+@@ -69,7 +69,7 @@ int usrp_cleanup(RIG *rig)
+ 
+ int usrp_open(RIG *rig)
+ {
+-	struct usrp_priv_data *priv = static_cast<struct usrp_priv_data*>STATE(rig)->priv;
++	struct usrp_priv_data *priv = static_cast<struct usrp_priv_data*>(STATE(rig)->priv);
+ 
+ 	int which_board = 0;
+ 	int decim = 125;
+@@ -83,7 +83,7 @@ int usrp_open(RIG *rig)
+ 
+ int usrp_close(RIG *rig)
+ {
+-	struct usrp_priv_data *priv = static_cast<struct usrp_priv_data*>STATE(rig)->priv;
++	struct usrp_priv_data *priv = static_cast<struct usrp_priv_data*>(STATE(rig)->priv);
+ 
+     if (!priv)
+     {
+@@ -101,7 +101,7 @@ int usrp_close(RIG *rig)
+  */
+ int usrp_set_conf(RIG *rig, hamlib_token_t token, const char *val)
+ {
+-	struct usrp_priv_data *priv = static_cast<struct usrp_priv_data*>STATE(rig)->priv;
++	struct usrp_priv_data *priv = static_cast<struct usrp_priv_data*>(STATE(rig)->priv);
+ 
+     if (!priv)
+     {
+@@ -111,7 +111,7 @@ int usrp_set_conf(RIG *rig, hamlib_token
+ 
+ 	switch(token) {
+ 		case TOK_IFMIXFREQ:
+-			sscanf(val, "%"SCNfreq, &priv->if_mix_freq);
++			sscanf(val, "%" SCNfreq, &priv->if_mix_freq);
+ 			break;
+ 		default:
+ 			return -RIG_EINVAL;
+@@ -126,7 +126,7 @@ int usrp_set_conf(RIG *rig, hamlib_token
+  */
+ int usrp_get_conf(RIG *rig, hamlib_token_t token, char *val)
+ {
+-	const struct usrp_priv_data *priv = static_cast<struct usrp_priv_data*>STATE(rig)->priv;
++	const struct usrp_priv_data *priv = static_cast<struct usrp_priv_data*>(STATE(rig)->priv);
+ 
+     if (!priv)
+     {
+@@ -136,7 +136,7 @@ int usrp_get_conf(RIG *rig, hamlib_token
+ 
+ 	switch(token) {
+ 		case TOK_IFMIXFREQ:
+-			sprintf(val, "%"PRIfreq, priv->if_mix_freq);
++			sprintf(val, "%" PRIfreq, priv->if_mix_freq);
+ 			break;
+ 		default:
+ 			return -RIG_EINVAL;
+@@ -148,7 +148,7 @@ int usrp_get_conf(RIG *rig, hamlib_token
+ 
+ int usrp_set_freq(RIG *rig, vfo_t vfo, freq_t freq)
+ {
+-	const struct usrp_priv_data *priv = static_cast<struct usrp_priv_data*>STATE(rig)->priv;
++	const struct usrp_priv_data *priv = static_cast<struct usrp_priv_data*>(STATE(rig)->priv);
+ 	int chan = 0;
+ 
+     if (!priv)
+@@ -166,7 +166,7 @@ int usrp_set_freq(RIG *rig, vfo_t vfo, f
+ 
+ int usrp_get_freq(RIG *rig, vfo_t vfo, freq_t *freq)
+ {
+-	const struct usrp_priv_data *priv = static_cast<struct usrp_priv_data*>STATE(rig)->priv;
++	const struct usrp_priv_data *priv = static_cast<struct usrp_priv_data*>(STATE(rig)->priv);
+ 	int chan = 0;
+ 
+     if (!priv)
+--- hamlib-4.6.2/rigs/kit/usrp.c.orig	2025-02-09 22:22:13.000000000 +0100
++++ hamlib-4.6.2/rigs/kit/usrp.c	2025-03-29 21:09:18.280392029 +0100
+@@ -22,6 +22,7 @@
+ /*
+  * Compile only this model if usrp is available
+  */
++#include "hamlib/config.h"
+ #if defined(HAVE_USRP)
+ 
+ 
