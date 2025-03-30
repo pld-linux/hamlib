@@ -242,12 +242,14 @@ radiem z poziomu skryptów Tcl-a.
 install -d build-python2
 cd build-python2
 %configure \
+	ac_cv_prog_cf_with_cxx=yes \
 	PYTHON=%{__python} \
 	--disable-silent-rules \
 	--disable-static \
 	%{?with_usrp:--enable-usrp} \
-	%{!?with_indi:--without-indi} \
-	--with-python-binding
+	--with-indi%{!?with_indi:=no} \
+	--with-python-binding \
+	--with-xml-support
 
 %{__make}
 cd ..
@@ -257,10 +259,12 @@ cd ..
 install -d build-static
 cd build-static
 %configure \
+	ac_cv_prog_cf_with_cxx=yes \
 	--disable-silent-rules \
 	--disable-shared \
 	%{?with_usrp:--enable-usrp} \
-	%{!?with_indi:--without-indi}
+	--with-indi%{!?with_indi:=no} \
+	--with-xml-support
 
 %{__make}
 cd ..
@@ -269,17 +273,19 @@ cd ..
 install -d build
 cd build
 %configure \
+	ac_cv_prog_cf_with_cxx=yes \
 	LUA=/usr/bin/lua5.2 \
 	PYTHON=%{__python3} \
 	TCL_VERSION=%{tcl_version} \
 	--disable-silent-rules \
 	--disable-static \
 	%{?with_usrp:--enable-usrp} \
-	%{!?with_indi:--without-indi} \
+	--with-indi%{!?with_indi:=no} \
 	%{?with_lua:--with-lua-binding} \
 	%{?with_perl:--with-perl-binding} \
 	%{?with_python3:--with-python-binding} \
-	%{?with_tcl:--with-tcl-binding}
+	%{?with_tcl:--with-tcl-binding} \
+	--with-xml-support
 
 %{__make}
 
