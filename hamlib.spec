@@ -12,15 +12,14 @@
 Summary:	Library to control radio transceivers and receivers
 Summary(pl.UTF-8):	Biblioteka do sterowania nadajnikami i odbiornikami radiowymi
 Name:		hamlib
-Version:	4.6.2
-Release:	2
+Version:	4.6.5
+Release:	1
 License:	LGPL v2.1+ (library), GPL v2+ (programs)
 Group:		Libraries
 #Source0Download: https://github.com/Hamlib/Hamlib/releases
 Source0:	https://github.com/Hamlib/Hamlib/releases/download/%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	5cf7fa5fdc692050c7df8ea709f63f25
+# Source0-md5:	f09da0a80c604de24c87bdb1b6d34c2d
 Patch0:		%{name}-perl_install.patch
-Patch1:		%{name}-usrp.patch
 URL:		http://hamlib.org/
 BuildRequires:	autoconf >= 2.69
 BuildRequires:	automake
@@ -229,7 +228,6 @@ radiem z poziomu skryptów Tcl-a.
 %prep
 %setup -q
 %patch -P 0 -p1
-%patch -P 1 -p1
 
 %build
 %{__libtoolize}
@@ -440,7 +438,6 @@ rm -rf $RPM_BUILD_ROOT
 %files -n python-%{name}
 %defattr(644,root,root,755)
 %attr(755,root,root) %{py_sitedir}/_Hamlib.so
-%{py_sitedir}/Hamlib.py[co]
 %endif
 
 %if %{with python3}
