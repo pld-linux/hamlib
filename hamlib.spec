@@ -22,7 +22,7 @@ Source0:	https://github.com/Hamlib/Hamlib/releases/download/%{version}/%{name}-%
 Patch0:		%{name}-perl_install.patch
 URL:		http://hamlib.org/
 BuildRequires:	autoconf >= 2.69
-BuildRequires:	automake
+BuildRequires:	automake >= 1:1.8
 BuildRequires:	boost-devel
 BuildRequires:	doxygen
 BuildRequires:	gd-devel
@@ -40,6 +40,7 @@ BuildRequires:	pkgconfig
 %{?with_python2:BuildRequires:	python-devel >= 2.1}
 %{?with_python3:BuildRequires:	python3-devel >= 1:3.2}
 BuildRequires:	readline-devel
+BuildRequires:	rpm-pythonprov
 BuildRequires:	rpmbuild(macros) >= 2.043
 BuildRequires:	source-highlight
 %{?with_perl:BuildRequires:	swig-perl >= 3.0.12}
@@ -438,6 +439,7 @@ rm -rf $RPM_BUILD_ROOT
 %files -n python-%{name}
 %defattr(644,root,root,755)
 %attr(755,root,root) %{py_sitedir}/_Hamlib.so
+%{py_sitedir}/Hamlib.py[co]
 %endif
 
 %if %{with python3}
